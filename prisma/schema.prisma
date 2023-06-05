@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model academy {
+  id      String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name    String @db.VarChar(255)
+  user_id String @db.Uuid
+  user    user   @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  team    team[]
+}
+
+model coach {
+  id            String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id       String          @db.Uuid
+  team_id       String          @db.Uuid
+  team          team            @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user          user            @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  practice_plan practice_plan[]
+}
+
+model drill {
+  id               String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  practice_plan_id String            @db.Uuid
+  name             String            @db.VarChar(255)
+  description      String?
+  practice_plan    practice_plan     @relation(fields: [practice_plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  player_progress  player_progress[]
+}
+
+model player {
+  id              String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id         String            @db.Uuid
+  team_id         String            @db.Uuid
+  team            team              @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user            user              @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  player_progress player_progress[]
+}
+
+model player_progress {
+  id              String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  player_id       String   @db.Uuid
+  drill_id        String   @db.Uuid
+  completion_date DateTime @db.Timestamp(6)
+  feedback        String?
+  drill           drill    @relation(fields: [drill_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  player          player   @relation(fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model practice_plan {
+  id          String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  coach_id    String  @db.Uuid
+  title       String  @db.VarChar(255)
+  description String?
+  drill       drill[]
+  coach       coach   @relation(fields: [coach_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model schedule {
+  id         String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  team_id    String   @db.Uuid
+  event_name String   @db.VarChar(255)
+  event_date DateTime @db.Timestamp(6)
+  team       team     @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model team {
+  id         String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name       String     @db.VarChar(255)
+  academy_id String     @db.Uuid
+  coach      coach[]
+  player     player[]
+  schedule   schedule[]
+  academy    academy    @relation(fields: [academy_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model user {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email       String    @unique @db.VarChar(255)
+  firstName   String?   @db.VarChar(255)
+  lastName    String?   @db.VarChar(255)
+  roq_user_id String    @db.VarChar(255)
+  tenant_id   String    @db.VarChar(255)
+  academy     academy[]
+  coach       coach[]
+  player      player[]
+}
